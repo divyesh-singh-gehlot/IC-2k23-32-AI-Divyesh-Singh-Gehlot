@@ -291,7 +291,7 @@ Only the current quantities of water in the two jugs are maintained.
 Add a screenshot of your program execution here:
 
 ```text
-![Console Output](screenshots/output.png)
+![Console Output](Outputs/Task1.png)
 ```
 
 ### State Visualization
