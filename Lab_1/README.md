@@ -284,15 +284,11 @@ Only the current quantities of water in the two jugs are maintained.
 
 ---
 
-# 6. Screenshots / Graphs / Visualization
+## 6. Screenshots / Graphs / Visualization
 
-## Console Output
+### Console Output
 
-Add a screenshot of your program execution here:
-
-```text
 ![Console Output](Outputs/Task1.png)
-```
 
 ### State Visualization
 
