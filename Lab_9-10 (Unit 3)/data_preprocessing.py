@@ -1,14 +1,19 @@
 # Lab 3 - Data Preprocessing (Student Placement Dataset)
-# Day 1: dataset loading and exploratory data analysis (EDA)
+# Day 1: loading + EDA
+# Day 2: cleaning, missing values, label encoding
 
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import LabelEncoder
 
 BASE_DIR = Path(__file__).resolve().parent
 DATASET_PATH = BASE_DIR.parent / "datasets" / "placement.csv"
 TARGET_COLUMN = "status"
+CATEGORICAL_COLUMNS = ["gender", "ssc_b", "hsc_b", "hsc_s",
+                       "degree_t", "workex", "specialisation"]
+NUMERIC_COLUMNS = ["ssc_p", "hsc_p", "degree_p", "etest_p", "mba_p"]
 
 
 # ---------------- 1. Dataset loading ----------------
@@ -95,6 +100,82 @@ def explore_data(df):
     print(df[TARGET_COLUMN].value_counts().to_string())
 
 
+# ---------------- 3. Data cleaning ----------------
+def clean_data(df):
+    cleaned = df.copy()
+    rows_before = len(cleaned)
+
+    cleaned = cleaned.drop_duplicates().reset_index(drop=True)
+    print(f"Removed {rows_before - len(cleaned)} duplicate rows.")
+
+    # remove extra spaces and fix case ('m' -> 'M')
+    for column in CATEGORICAL_COLUMNS:
+        cleaned[column] = cleaned[column].astype("string").str.strip()
+    cleaned["gender"] = cleaned["gender"].str.upper()
+
+    # serial number is not useful for prediction
+    cleaned = cleaned.drop(columns=["sl_no"], errors="ignore")
+
+    # percentages must be between 0 and 100
+    for column in NUMERIC_COLUMNS:
+        invalid = ~cleaned[column].between(0, 100) & cleaned[column].notna()
+        cleaned.loc[invalid, column] = np.nan
+    return cleaned
+
+
+# ---------------- 4. Missing value handling ----------------
+def handle_missing_values(df):
+    # numeric -> median, categorical -> mode, salary NaN -> 0 (not placed)
+    imputed = df.copy()
+
+    for column in NUMERIC_COLUMNS:
+        median_value = imputed[column].median()
+        count = imputed[column].isnull().sum()
+        imputed[column] = imputed[column].fillna(median_value)
+        if count:
+            print(f"  {column}: filled {count} missing with median = {median_value:.2f}")
+
+    for column in CATEGORICAL_COLUMNS:
+        mode_value = imputed[column].mode()[0]
+        count = imputed[column].isnull().sum()
+        imputed[column] = imputed[column].fillna(mode_value)
+        if count:
+            print(f"  {column}: filled {count} missing with mode = '{mode_value}'")
+
+    imputed["salary"] = imputed["salary"].fillna(0)
+    return imputed
+
+
+def compare_missing_strategies(df_with_missing):
+    # compares drop / mean / median on one column
+    column = "etest_p"
+    series = df_with_missing[column]
+    results = pd.DataFrame({
+        "Strategy": ["Original (with NaN)", "Drop rows", "Mean imputation", "Median imputation"],
+        "Rows": [len(series), series.dropna().shape[0], len(series), len(series)],
+        "Mean": [series.mean(), series.dropna().mean(), series.fillna(series.mean()).mean(), series.fillna(series.median()).mean()],
+        "Std": [series.std(), series.dropna().std(), series.fillna(series.mean()).std(), series.fillna(series.median()).std()],
+    }).round(2)
+    print(f"\nComparison of missing-value strategies on '{column}':")
+    print(results.to_string(index=False))
+
+
+# ---------------- 5. Label encoding ----------------
+def encode_labels(df):
+    encoded = df.copy()
+    mappings = {}
+
+    for column in CATEGORICAL_COLUMNS + [TARGET_COLUMN]:
+        encoder = LabelEncoder()
+        encoded[column] = encoder.fit_transform(encoded[column].astype(str))
+        mappings[column] = {label: int(code) for code, label in enumerate(encoder.classes_)}
+
+    print("Label encoding mappings:")
+    for column, mapping in mappings.items():
+        print(f"  {column}: {mapping}")
+    return encoded, mappings
+
+
 def main():
     try:
         print("\n[1] DATASET LOADING")
@@ -103,6 +184,28 @@ def main():
 
         print()
         explore_data(raw_df)
+
+        print("\n" + "=" * 60)
+        print("DATA CLEANING")
+        print("=" * 60)
+        cleaned_df = clean_data(raw_df)
+
+        compare_missing_strategies(cleaned_df)
+
+        print("\n" + "=" * 60)
+        print("MISSING VALUE HANDLING")
+        print("=" * 60)
+        imputed_df = handle_missing_values(cleaned_df)
+        print(f"Missing values remaining: {imputed_df.isnull().sum().sum()}")
+
+        print("\n" + "=" * 60)
+        print("LABEL ENCODING")
+        print("=" * 60)
+        encoded_df, _ = encode_labels(imputed_df)
+
+        processed_path = DATASET_PATH.parent / "placement_processed.csv"
+        encoded_df.to_csv(processed_path, index=False)
+        print(f"\nProcessed dataset saved to: {processed_path.name}")
 
     except (ValueError, KeyError, OSError) as error:
         print(f"[ERROR] Pipeline failed: {error}")
