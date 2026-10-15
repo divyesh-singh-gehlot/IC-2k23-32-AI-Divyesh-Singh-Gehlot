@@ -1,11 +1,17 @@
 # Lab 3 - Data Preprocessing (Student Placement Dataset)
 # Day 1: loading + EDA
 # Day 2: cleaning, missing values, label encoding
+# Day 3: feature selection, visualization, full pipeline
 
 from pathlib import Path
 
+import matplotlib
+matplotlib.use("Agg")   # save plots to files instead of opening windows
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
+from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.preprocessing import LabelEncoder
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -14,6 +20,7 @@ TARGET_COLUMN = "status"
 CATEGORICAL_COLUMNS = ["gender", "ssc_b", "hsc_b", "hsc_s",
                        "degree_t", "workex", "specialisation"]
 NUMERIC_COLUMNS = ["ssc_p", "hsc_p", "degree_p", "etest_p", "mba_p"]
+OUTPUT_DIR = BASE_DIR / "outputs"
 
 
 # ---------------- 1. Dataset loading ----------------
@@ -176,6 +183,74 @@ def encode_labels(df):
     return encoded, mappings
 
 
+# ---------------- 6. Feature selection ----------------
+def select_features(df, k=5):
+    # salary is left out because it is only known after a student is placed (data leakage)
+    features = df.drop(columns=[TARGET_COLUMN, "salary"])
+    target = df[TARGET_COLUMN]
+
+    correlations = features.corrwith(target).abs().sort_values(ascending=False)
+
+    selector = SelectKBest(score_func=f_classif, k=k).fit(features, target)
+    scores = pd.Series(selector.scores_, index=features.columns).sort_values(ascending=False)
+    selected = list(features.columns[selector.get_support()])
+
+    print("\nAbsolute correlation with target:")
+    print(correlations.round(3).to_string())
+    print("\nANOVA F-scores:")
+    print(scores.round(2).to_string())
+    print(f"\nTop {k} selected features: {selected}")
+    return selected, scores
+
+
+# ---------------- 7. Data visualization ----------------
+def visualize_data(raw_df, encoded_df, feature_scores):
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    sns.set_theme(style="whitegrid")
+
+    # 1. histograms of numeric columns
+    raw_df[NUMERIC_COLUMNS].hist(bins=15, figsize=(12, 7), edgecolor="black")
+    plt.suptitle("Distribution of Numeric Features")
+    plt.tight_layout()
+    plt.savefig(OUTPUT_DIR / "01_numeric_distributions.png", dpi=120)
+    plt.close()
+
+    # 2. placement status for a few categorical columns
+    fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+    for axis, column in zip(axes, ["gender", "workex", "specialisation"]):
+        sns.countplot(data=raw_df, x=column, hue=TARGET_COLUMN, ax=axis)
+        axis.set_title(f"Placement by {column}")
+    plt.tight_layout()
+    plt.savefig(OUTPUT_DIR / "02_placement_by_category.png", dpi=120)
+    plt.close()
+
+    # 3. box plot to check outliers
+    plt.figure(figsize=(9, 5))
+    sns.boxplot(data=raw_df[NUMERIC_COLUMNS])
+    plt.title("Box Plot of Numeric Features (Outlier Check)")
+    plt.savefig(OUTPUT_DIR / "03_boxplot_outliers.png", dpi=120)
+    plt.close()
+
+    # 4. correlation heatmap
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(encoded_df.drop(columns=["salary"]).corr(), annot=True, fmt=".2f", cmap="coolwarm", square=True)
+    plt.title("Correlation Heatmap (Encoded Features)")
+    plt.tight_layout()
+    plt.savefig(OUTPUT_DIR / "04_correlation_heatmap.png", dpi=120)
+    plt.close()
+
+    # 5. feature scores
+    plt.figure(figsize=(8, 5))
+    feature_scores.sort_values().plot(kind="barh", color="steelblue")
+    plt.title("Feature Scores (ANOVA F-test)")
+    plt.xlabel("F-score")
+    plt.tight_layout()
+    plt.savefig(OUTPUT_DIR / "05_feature_scores.png", dpi=120)
+    plt.close()
+
+    print(f"Saved 5 plots to: {OUTPUT_DIR}")
+
+
 def main():
     try:
         print("\n[1] DATASET LOADING")
@@ -202,6 +277,16 @@ def main():
         print("LABEL ENCODING")
         print("=" * 60)
         encoded_df, _ = encode_labels(imputed_df)
+
+        print("\n" + "=" * 60)
+        print("FEATURE SELECTION")
+        print("=" * 60)
+        _, feature_scores = select_features(encoded_df, k=5)
+
+        print("\n" + "=" * 60)
+        print("DATA VISUALIZATION")
+        print("=" * 60)
+        visualize_data(imputed_df, encoded_df, feature_scores)
 
         processed_path = DATASET_PATH.parent / "placement_processed.csv"
         encoded_df.to_csv(processed_path, index=False)

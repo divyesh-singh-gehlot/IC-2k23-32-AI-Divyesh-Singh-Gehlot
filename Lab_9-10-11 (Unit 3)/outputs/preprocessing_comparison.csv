@@ -1,0 +1,19 @@
+Experiment,Technique,Model,Rows,CV Accuracy,Std
+Missing values,Drop rows with NaN,logreg,190,68.95,5.1
+Missing values,Drop rows with NaN,tree,190,65.79,6.23
+Missing values,Median/mode imputation,logreg,215,67.91,6.14
+Missing values,Median/mode imputation,tree,215,65.58,4.97
+Encoding,Label (ordinal) encoding,logreg,215,69.3,4.74
+Encoding,Label (ordinal) encoding,tree,215,66.98,4.0
+Encoding,One-hot encoding,logreg,215,67.91,6.14
+Encoding,One-hot encoding,tree,215,65.58,4.97
+Scaling,No scaling,logreg,215,68.37,6.17
+Scaling,StandardScaler,logreg,215,67.91,6.14
+Feature engineering,Original features,logreg,215,67.91,6.14
+Feature engineering,"+ avg_academic, academic_trend",logreg,215,68.37,6.17
+Feature engineering,Original features,tree,215,65.58,4.97
+Feature engineering,"+ avg_academic, academic_trend",tree,215,66.05,4.79
+Feature selection,All 12 features,logreg,215,67.91,6.14
+Feature selection,Top 5 (SelectKBest),logreg,215,70.7,6.68
+Feature selection,All 12 features,tree,215,65.58,4.97
+Feature selection,Top 5 (SelectKBest),tree,215,66.98,3.72
