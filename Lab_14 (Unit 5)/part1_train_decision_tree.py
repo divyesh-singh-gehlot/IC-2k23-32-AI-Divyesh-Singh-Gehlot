@@ -1,5 +1,5 @@
-# Lab 5 - Part 1: Student Placement Prediction using a Decision Tree
-# Uses the processed dataset from Lab 3 (all columns are already numbers).
+# Lab 14 - Part 1: Student Placement Prediction using a Decision Tree
+# Uses the processed dataset from Lab 11 (all columns are already numbers).
 
 import joblib
 import pandas as pd

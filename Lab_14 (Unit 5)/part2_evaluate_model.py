@@ -1,4 +1,4 @@
-# Lab 5 - Part 2: Model Evaluation
+# Lab 14 - Part 2: Model Evaluation
 # Confusion matrix, classification report and the effect of tree depth.
 
 import joblib
