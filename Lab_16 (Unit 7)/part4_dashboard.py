@@ -1,4 +1,4 @@
-# Lab 7 - Part 4: Explainable AI Dashboard
+# Lab 16 - Part 4: Explainable AI Dashboard
 # Puts the global explanations, the local explanation and the model
 # performance together on one page.
 

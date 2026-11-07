@@ -1,4 +1,4 @@
-# Lab 7 - Part 2: Permutation importance (works for ANY model)
+# Lab 16 - Part 2: Permutation importance (works for ANY model)
 # Idea: shuffle one feature in the test data. If accuracy drops a lot,
 # the model relied on that feature. Repeat many times to get an average.
 

@@ -1,4 +1,4 @@
-# Lab 7 - Part 3: Local explanation - why did the model predict this for ONE student?
+# Lab 16 - Part 3: Local explanation - why did the model predict this for ONE student?
 #   (a) the decision path (the exact rules this student followed)
 #   (b) what-if analysis (how the prediction changes if a feature changes)
 

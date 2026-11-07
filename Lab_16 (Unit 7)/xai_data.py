@@ -1,5 +1,5 @@
-# Helper for Lab 7: loads the placement data and trains the decision tree
-# (same settings as Lab 5, so the dashboard explains the Lab 5 model).
+# Helper for Lab 16: loads the placement data and trains the decision tree
+# (same settings as Lab 14, so the dashboard explains the Lab 5 model).
 
 import pandas as pd
 from sklearn.model_selection import train_test_split

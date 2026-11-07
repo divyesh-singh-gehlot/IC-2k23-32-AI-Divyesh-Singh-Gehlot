@@ -1,4 +1,4 @@
-# Lab 7 - Part 1: Global explanation - which features does the model use?
+# Lab 16 - Part 1: Global explanation - which features does the model use?
 # Decision trees give "impurity importance": how much each feature reduced
 # the impurity (gini) across all the splits it was used in.
 
